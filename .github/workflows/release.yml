@@ -86,7 +86,7 @@ jobs:
         run: Compress-Archive -Path sforge.exe -DestinationPath "$env:GITHUB_WORKSPACE/sforge-${{ matrix.target }}.zip"
 
       - name: Attach to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: sforge-${{ matrix.target }}.*
 
@@ -126,6 +126,6 @@ jobs:
           npm run package
 
       - name: Attach to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: extension/dist/sessionforge-chrome.zip
