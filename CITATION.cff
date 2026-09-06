@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "SessionForge"
+version: 1.0.0
+date-released: "2026-09-06"
+url: "https://github.com/mateocallec/sforge"
+repository-code: "https://github.com/mateocallec/sforge"
+license:
+  - MIT
+  - Apache-2.0
+authors:
+  - family-names: "Callec"
+    given-names: "Mateo"
+    alias: "mateocallec"
+abstract: >-
+  A curl-like HTTP client with named, reusable browser sessions, paired with a browser extension
+  that captures a profile's cookies into a ready-to-paste setup command. Built for penetration
+  testers juggling multiple accounts across multiple browser profiles.
+keywords:
+  - http
+  - cli
+  - pentest
+  - security
+  - session
+  - curl
+  - browser-extension

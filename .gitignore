@@ -1,0 +1,24 @@
+# Rust (cli/)
+/cli/target/
+
+# Node (extension/)
+/extension/node_modules/
+/extension/dist/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Secrets / certs — never commit
+*.pem
+*.key
+*.p12
+.env
+.env.*
+
+# Browser extension packaging artifacts
+*.crx
+*.xpi
+*.zip

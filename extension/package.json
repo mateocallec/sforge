@@ -1,0 +1,29 @@
+{
+  "name": "sessionforge-extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser extension for SessionForge — captures a browser profile's cookies into a ready-to-paste sforge setup command.",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "format": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --write .",
+    "format:check": "prettier --config ../.prettierrc --ignore-path ../.prettierignore --check .",
+    "build": "node scripts/build.mjs",
+    "package": "node scripts/package.mjs"
+  },
+  "dependencies": {
+    "tldts": "7.4.11"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "adm-zip": "0.6.0",
+    "esbuild": "0.28.2",
+    "eslint": "10.10.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.69.0",
+    "web-ext": "10.6.0"
+  }
+}

@@ -1,0 +1,131 @@
+name: release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  verify-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve and cross-check version
+        id: version
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+
+          cargo_version=$(grep -m1 '^version' cli/Cargo.toml | sed -E 's/version *= *"(.*)"/\1/')
+          pkg_version=$(jq -r .version extension/package.json)
+          manifest_version=$(jq -r .version extension/manifest/base.json)
+
+          fail=0
+          for pair in "cli/Cargo.toml:$cargo_version" "extension/package.json:$pkg_version" "extension/manifest/base.json:$manifest_version"; do
+            file="${pair%%:*}"
+            v="${pair##*:}"
+            if [ "$v" != "$version" ]; then
+              echo "::error::$file has version \"$v\", but the release tag $tag implies \"$version\""
+              fail=1
+            fi
+          done
+          if [ "$fail" -eq 1 ]; then
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  build-cli:
+    needs: verify-version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive: tar.gz
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            archive: zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: cli
+          key: ${{ matrix.target }}
+
+      - name: Build
+        working-directory: cli
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Package (tar.gz)
+        if: matrix.archive == 'tar.gz'
+        working-directory: cli/target/${{ matrix.target }}/release
+        run: tar czf "$GITHUB_WORKSPACE/sforge-${{ matrix.target }}.tar.gz" sforge
+
+      - name: Package (zip)
+        if: matrix.archive == 'zip'
+        working-directory: cli/target/${{ matrix.target }}/release
+        run: Compress-Archive -Path sforge.exe -DestinationPath "$env:GITHUB_WORKSPACE/sforge-${{ matrix.target }}.zip"
+
+      - name: Attach to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: sforge-${{ matrix.target }}.*
+
+  publish-crate:
+    needs: [verify-version, build-cli]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Dry-run package check
+        working-directory: cli
+        run: cargo publish --dry-run
+
+      - name: Publish to crates.io
+        working-directory: cli
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish
+
+  package-extension:
+    needs: verify-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+
+      - working-directory: extension
+        run: |
+          npm ci
+          npm run build
+          npm run package
+
+      - name: Attach to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: extension/dist/sessionforge-chrome.zip
