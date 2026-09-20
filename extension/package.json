@@ -14,7 +14,7 @@
     "package": "node scripts/package.mjs"
   },
   "dependencies": {
-    "tldts": "7.4.11"
+    "tldts": "7.4.13"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
